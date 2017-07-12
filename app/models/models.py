@@ -14,8 +14,21 @@ class User(db.Model):
     username = db.Column(db.String(128))
     password = db.Column(db.String(128))
     email = db.Column(db.String(128))
+    buckets = db.relationship('Bucketlist', backref='user',
+                                lazy='dynamic')
+
 
 class Bucketlist(db.Model):
     bucket_id = db.Column(db.Integer, primary_key=True)
     bucket_name = db.Column(db.String)
     bucket_descriptions = db.Column(db.String)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    items = db.relationship('BucketlistItems', backref='bucketlist',
+                                lazy='dynamic')
+
+class BucketlistItems(db.Model):
+    item_id = db.Column(db.Integer, primary_key=True)
+    item_name = db.Column(db.String)
+    item_status = db.Column(db.String)
+    due_date    = db.Column(db.String)
+    bucket_id = db.Column(db.Integer, db.ForeignKey('bucketlist.bucket_id'))  
