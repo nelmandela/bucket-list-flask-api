@@ -1,3 +1,5 @@
+from sqlalchemy_paginator import Paginator
+
 from app.models.models import Bucketlist
 from app import app
 from app.models.models import db
@@ -42,19 +44,52 @@ class BucketStore(object):
             response = 'Bucket not found.'
         return response
     
-    def get_all(self):
+    def get_all(self, limit, q):
         '''
         method gets all buckectlists
         '''
-        buckets = Bucketlist.query.all()
-        bucket_list = []
-        for bucket in buckets:
-            bucket_container = {}
-            bucket_container['bucket_name'] = bucket.bucket_name
-            bucket_container['bucket_description'] = bucket.bucket_descriptions
-            bucket_container['bucket_id'] = bucket.bucket_id
-            bucket_list.append(bucket_container)
-        return bucket_list
+        response = None
+        if limit:
+            limit = int(limit)
+            if q:
+                query = db.session.query(Bucketlist).filter(Bucketlist.bucket_name == q)
+            else:
+                query = db.session.query(Bucketlist)
+            paginator = Paginator(query, limit)
+            for page in paginator:
+                bucket_list = []
+                for bucket in page.object_list:
+                    bucket_container = {}
+                    bucket_container['bucket_name'] = bucket.bucket_name
+                    bucket_container['bucket_description'] = bucket.bucket_descriptions
+                    bucket_container['bucket_id'] = bucket.bucket_id
+                    bucket_list.append(bucket_container)
+                return bucket_list
+        
+        elif q is not None and limit is None:
+            query = db.session.query(Bucketlist).filter(Bucketlist.bucket_name == q)
+            paginator = Paginator(query, int(3))
+            for page in paginator:
+                bucket_list = []
+                for bucket in page.object_list:
+                    bucket_container = {}
+                    bucket_container['bucket_name'] = bucket.bucket_name
+                    bucket_container['bucket_description'] = bucket.bucket_descriptions
+                    bucket_container['bucket_id'] = bucket.bucket_id
+                    bucket_list.append(bucket_container)
+                return bucket_list
+        else:
+            buckets = Bucketlist.query.all()
+            bucket_list = []
+            for bucket in buckets:
+                bucket_container = {}
+                bucket_container['bucket_name'] = bucket.bucket_name
+                bucket_container['bucket_description'] = bucket.bucket_descriptions
+                bucket_container['bucket_id'] = bucket.bucket_id
+                bucket_list.append(bucket_container)
+            response = bucket_list
+        return response
+
     
     def delete(self, id):
         '''
