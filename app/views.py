@@ -74,7 +74,6 @@ def bucketlists(current_user):
     bucket_name = data['bucket_name']
     bucket_description   = data['bucket_description']
     user_id     = data['user_id']
-    print(user.get_all())
     response = bucket.create_bucketlist(bucket_name=bucket_name, bucket_description=bucket_description, user_id=user_id)
     return jsonify({"response": response})
 
@@ -88,14 +87,16 @@ def view_bucketlists(current_user,bucket_id):
     print(response)
     return jsonify({"response": response})
 
-@app.route('/bucketlists', methods=['GET'])
+@app.route('/bucketlists')
+@app.route('/bucketlists/<limit>/<q>', methods=['GET'])
 @token_required
-def all_bucketlists(current_user):
+def all_bucketlists(current_user, limit=None, q=None):
     '''
     Route enables users to view all thier bucketlists
     '''
-    response = bucket.get_all()
-    print(response)
+    limit_value  = request.args.get('limit')
+    q = request.args.get('q')
+    response = bucket.get_all(limit_value, q)
     return jsonify({"response": response})
 
 @app.route('/bucketlists/<int:bucket_id>', methods=['PUT'])
@@ -123,7 +124,7 @@ def delete_bucketlists(current_user, bucket_id):
     updated_response = bucket.delete(bucket_id)
     return jsonify({"response": updated_response})
 
-@app.route('/bucketlist/<int:bucket_id>/items', methods=['POST'])
+@app.route('/bucketlists/<int:bucket_id>/items', methods=['POST'])
 @token_required
 def items_add(current_user, bucket_id):
     '''
@@ -137,15 +138,17 @@ def items_add(current_user, bucket_id):
     return jsonify({"response": response})
 
 
-
 @app.route('/bucketlists/<int:bucket_id>/items', methods=['GET'])
+@app.route('/bucketlists/<int:bucket_id>/items/<limit>/<q>', methods=['GET'])
 @token_required
-def get_all_items(bucket_id, current_user):
+def get_all_items(current_user, bucket_id):
     '''
     Route enables users to view thier bucketlists items
     '''
-    response = item.get_all(bucket_id)
-    print(response)
+    limit_value  = request.args.get('limit')
+    q = request.args.get('q')
+    print(limit_value)
+    response = item.get_all(bucket_id, limit_value, q)
     return jsonify({"response": response})
 
 
