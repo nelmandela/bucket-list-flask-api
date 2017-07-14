@@ -1,3 +1,5 @@
+from sqlalchemy_paginator import Paginator
+
 from app.models.models import BucketlistItems
 from app import app
 from app.models.models import db
@@ -49,20 +51,56 @@ class ItemStore(object):
 
 # get_item_by_id
 
-    def get_all(self, id):
+    def get_all(self, id, limit ,q):
         '''
         method gets all bucketlist items
         '''
-        bucketitems = BucketlistItems.query.filter_by(bucket_id=id).all()
-        items_list = []
-        for item in bucketitems:
-            item_container = {}
-            item_container['item_name']   = item.item_name
-            item_container['item_status'] = item.item_status
-            item_container['due_date']    = item.due_date
-            item_container['bucket_id']   = item.bucket_id
-            items_list.append(item_container)
-        return items_list
+        response = None
+        if limit:
+            limit = int(limit)
+            if q:
+                query = db.session.query(BucketlistItems).filter(BucketlistItems.item_name == q, BucketlistItems.bucket_id == id)
+            else:
+                query = db.session.query(BucketlistItems).filter(BucketlistItems.bucket_id == id)
+            paginator = Paginator(query, limit)
+            for page in paginator:
+                print(page)
+                items_list = []
+                for item in page.object_list:
+                    item_container = {}
+                    item_container['item_name']   = item.item_name
+                    item_container['item_status'] = item.item_status
+                    item_container['due_date']    = item.due_date
+                    item_container['bucket_id']   = item.bucket_id
+                    items_list.append(item_container)
+                response = items_list
+
+        elif q is not None and limit is None:
+            query = db.session.query(BucketlistItems).filter(BucketlistItems.item_name == q, BucketlistItems.bucket_id == int(id))
+            paginator = Paginator(query, int(limit))
+            for page in paginator:
+                items_list = []
+                for item in page.object_list:
+                    item_container = {}
+                    item_container['item_name']   = item.item_name
+                    item_container['item_status'] = item.item_status
+                    item_container['due_date']    = item.due_date
+                    item_container['bucket_id']   = item.bucket_id
+                    items_list.append(item_container)
+            return bucket_list
+
+        else:
+            bucketitems = BucketlistItems.query.filter_by(bucket_id=id).all()
+            items_list = []
+            for item in bucketitems:
+                item_container = {}
+                item_container['item_name']   = item.item_name
+                item_container['item_status'] = item.item_status
+                item_container['due_date']    = item.due_date
+                item_container['bucket_id']   = item.bucket_id
+                items_list.append(item_container)
+            response = items_list
+        return response
 
 
     def get_items(self):
