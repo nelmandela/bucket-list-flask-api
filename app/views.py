@@ -15,6 +15,13 @@ user = UserStore()
 bucket = BucketStore()
 item  = ItemStore()
 
+@app.route('/')
+def index():
+    '''
+    Route enables a user to register
+    '''
+    return ""
+
 
 @app.route('/auth/register', methods=['POST'])
 def register():
