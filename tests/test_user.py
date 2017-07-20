@@ -23,11 +23,7 @@ class UserTestCase(unittest.TestCase):
         response = user.create_user(email='john@example.com', username='josiah', password_hash=generate_password_hash('pass'), name='jos', public_id=1)
         current_user = User.query.filter_by(username='josiah').first()
         assert current_user.username == 'josiah'
-
-    def test_unique_username(self):
-        user.create_user(email='john@example.com', username='josiah', password_hash=generate_password_hash('pass'), name='jos', public_id=12)
-        self.assertEqual(user.create_user(email='john@example.com', username='josiah', password_hash=generate_password_hash('pass'), name='jos', public_id=1), False)
-
+        
     def test_invalid_email_address(self):
         response = user.create_user(email='invalidEmail', username='josiah', password_hash=generate_password_hash('pass'), name='jos', public_id=12)
         users = User.query.all()
