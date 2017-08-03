@@ -1,13 +1,3 @@
-class BaseConfig(object):
-    DEBUG = False
-    TESTING = False
-
-
-class DevelopmentConfig(BaseConfig):
-    DEBUG = True
-    TESTING = True
-
-
-class TestingConfig(BaseConfig):
-    DEBUG = False
-    TESTING = True
+DEBUG = False
+SECRET_KEY = '123456789'
+DATABASE_URI = 'postgresql:///bucket'
