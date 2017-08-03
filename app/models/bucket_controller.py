@@ -1,10 +1,5 @@
-# from sqlalchemy_paginator import Paginator
-# from flask_paginate import Pagination, get_page_parameter
 from app.models.models import Bucketlist
-from app import app
 from app.models.models import db
-import re
-
 
 class BucketStore(object):
 
