@@ -1,11 +1,9 @@
-from flask import render_template, request, Flask, jsonify, make_response, Blueprint
-import uuid
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask import request, Flask, jsonify, session
 from flask_jwt import JWT, jwt_required
-import datetime
-from functools import wraps
 from flask_restful_swagger import swagger
-from flask_restful import reqparse, abort, Api, Resource
+from flask_restful import Api, Resource
+from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
 
 from app import app
 from app.models.user_controller import UserStore
@@ -17,36 +15,25 @@ user = UserStore()
 bucket = BucketStore()
 item = ItemStore()
 
-app = Flask(__name__)
-
-app.config['SECRET_KEY'] = 'super-secret'
 
 api = Api(app)
-api = swagger.docs(Api(app), apiVersion='0.1')
-
-USER_DATA = {
-    "masnun": "abc123"
-}
-
-
-class User(object):
-    def __init__(self, id):
-        self.id = id
-
-    def __str__(self):
-        return "User(id='%s')" % self.id
-
+api = swagger.docs(Api(app  ), apiVersion='0.1')
 
 def verify(username, password):
     if not (username and password):
+        return "invalid token"
+    u = user.login(username)
+    if u:
+        if check_password_hash(u.password, password):
+            session['user_id'] = u.id
+            return u
+    else:
         return False
-    if USER_DATA.get(username) == password:
-        return User(id=123)
 
 
 def identity(payload):
     user_id = payload['identity']
-    return {"user_id": user_id}
+    return user_id
 
 
 jwt = JWT(app, verify, identity)
@@ -62,16 +49,19 @@ class Bucketlist(Resource):
         search = request.args.get('q')
         if limit:
             response = bucket.get_all_buckets_with_limit(
-                limit)
+                limit, session.get('user_id'))
             return response
 
         elif search:
-            response = bucket.get_all_buckets_with_limit_query(search, limit)
+            response = bucket.get_all_buckets_with_limit_query(search, limit, session.get('user_id'))
             return response
 
-        elif kwargs['bucket_id']:
-            response = bucket.get_bucket(kwargs['bucket_id'])
-            return jsonify({"response": response})
+        elif kwargs.get("bucket_id") is not None:
+            response = bucket.get_bucket(kwargs['bucket_id'], session.get('user_id'))
+
+        else:
+            response = bucket.get_bucket_list_by_id(session.get('user_id'))
+        return jsonify({"response": response})
 
     @swagger.operation(
         notes='delete a todo item by bucket_id',
@@ -86,9 +76,10 @@ class Bucketlist(Resource):
     )
     @jwt_required()
     def post(self, **kwargs):
-        bucket_name = "mokobo"
-        bucket_description = "nyarega"
-        user_id = 1
+        data = request.get_json()
+        bucket_name = data["bucket_name"]
+        bucket_description = data["bucket_description"]
+        user_id = session['user_id']
         response = bucket.create_bucketlist(
             bucket_name=bucket_name, bucket_description=bucket_description, user_id=user_id)
         return jsonify({"response": response})
@@ -124,9 +115,12 @@ class BucketlistItems(Resource):
         elif limit:
             response = item.get_all_buckets_with_limit(
                 kwargs['bucket_id'], limit)
-        elif kwargs['item_id'] and kwargs['bucket_id']:
+
+        elif kwargs.get('item_id') and kwargs.get('bucket_id'):
             response = item.get_item_by_id(
                 kwargs['bucket_id'], kwargs['item_id'])
+        else:
+            response = item.get_items(kwargs.get("bucket_id"))
         return jsonify({"response": response})
 
     @swagger.operation(
@@ -177,9 +171,9 @@ class Users(Resource):
         username = data["username"]
         email = data["email"]
         password_hash = data["password_hash"]
-        public_id = "12345"
+        public_id = uuid.uuid4()
         response = user.create_user(
-            name=name, username=username, email=email, password_hash=password_hash, public_id=public_id)
+            name=name, username=username, email=email, password_hash=generate_password_hash(password_hash), public_id=public_id)
         return jsonify({"response": response})
 
 
@@ -195,6 +189,3 @@ api.add_resource(Bucketlist, '/api/v01/bucketlists/<int:bucket_id>/',
 api.add_resource(Users, '/api/v01/user/<int:user_id>/',
                  '/api/v01/user/', endpoint='user')
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
