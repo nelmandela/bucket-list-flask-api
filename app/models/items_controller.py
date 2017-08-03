@@ -1,4 +1,5 @@
 # from sqlalchemy_paginator import Paginator
+from sqlalchemy.exc import IntegrityError
 
 from app.models.models import BucketlistItems
 from app import app
@@ -26,8 +27,12 @@ class ItemStore(object):
                 db.session.add(bucket)
                 db.session.commit()
                 message = 'Bucketlist item successfully added to user.'
-        except:
-            message = 'Bucket does not exist'
+            else:
+                message = 'All fields are required'
+        except IntegrityError as e:
+            message = 'Item name already exists'
+        except Exception as e:
+            message = 'Bucket does not exist'+str(e)
         return message
 
     def get_item_by_id(self, bucket_id, item_id):
@@ -133,5 +138,5 @@ class ItemStore(object):
             db.session.commit()
             message = "Item successfully updated "
         except Exception as e:
-            message = "Bucketlist item does not exist ---"+ str(e)
+            message = "Bucketlist item does not exist"
         return message
