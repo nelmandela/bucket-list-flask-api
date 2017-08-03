@@ -20,6 +20,8 @@ class BucketStore(object):
                 db.session.add(bucket)
                 db.session.commit()
                 message = 'Bucket successfully added to user.'
+            else:
+                message = 'All fields are required'
         except Exception as e:
             message = 'Bucket not created'
         return message
