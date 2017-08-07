@@ -1,0 +1,35 @@
+definitions:
+  Data:
+    type: object
+    properties:
+      _id:
+        type: string
+
+paths:
+  /cv:
+    put:
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Data'
+          description: |
+      responses:
+        200:
+            Please wait the calculation, you'll receive an email with results
+    delete:
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Data'
+      responses:
+        200:
+          description: |
+            Please wait the calculation, you'll receive an email with results
+    post:
+      responses:
+        200:
+          description: done
