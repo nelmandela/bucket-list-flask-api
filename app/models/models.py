@@ -9,7 +9,6 @@ migrate = Migrate(app, db)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String, unique=True)
     name = db.Column(db.String)
     username = db.Column(db.String)
     password = db.Column(db.String)
@@ -17,12 +16,12 @@ class User(db.Model):
     buckets = db.relationship('Bucketlist', backref='user',
                               lazy='dynamic')
 
-    def __init__(self, name, username, email, password, public_id):
+    def __init__(self, name, username, email, password):
         self.username = username
         self.email = email
         self.name = name
         self.password = password
-        self.public_id = public_id
+        # self.public_id = public_id
 
     def __repr__(self):
         return '<User %r>' % self.username

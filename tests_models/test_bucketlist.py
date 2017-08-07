@@ -2,21 +2,17 @@
 import unittest
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from app.models.bucket_controller import BucketStore
-from app.models.models import *
-
-from app.models.models import db
 from app import app
+from app.models.models import db
+from tests_models.base import BaseTest
+from app.models.bucket_controller import BucketStore
 
 bucket = BucketStore()
 
-class BucketTestCase(unittest.TestCase):
+
+class BucketTestCase(BaseTest):
     def setUp(self):
-        app.config['TESTING'] = True
-        app.config['WTF_CSRF_ENABLED'] = False
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-        self.app = app.test_client()
-        db.create_all()
+        super(BucketTestCase, self).setUp()
 
     def test_create_bucketlist(self):
         response = bucket.create_bucketlist(bucket_name='Journey to the moon',
@@ -96,10 +92,4 @@ class BucketTestCase(unittest.TestCase):
         assert response == 'Bucket not created'
 
     def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        print("Destroying test database...")
-
-
-if __name__ == '__main__':
-    unittest.main()
+        super(BucketTestCase, self).tearDown()

@@ -1,23 +1,26 @@
-from flask import request, Flask, jsonify, session
-from flask_jwt import JWT, jwt_required
-from flask_restful_swagger import swagger
-from flask_restful import Api, Resource
-from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 
+from flask import Flask, json, jsonify, request, session
+from flask.ext.restful import Api, Resource
+from flask_restful_swagger import swagger
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from app import app
-from app.models.user_controller import UserStore
 from app.models.bucket_controller import BucketStore
 from app.models.items_controller import ItemStore
-
+from app.models.user_controller import UserStore
+from flask_jwt import JWT, jwt_required
 
 user = UserStore()
 bucket = BucketStore()
 item = ItemStore()
 
+###################################
+# Wrap the Api with swagger.docs. It is a thin wrapper around the Api class that adds some swagger smarts
+api = swagger.docs(Api(app), apiVersion='0.1')
+###################################
 
-api = Api(app)
-api = swagger.docs(Api(app  ), apiVersion='0.1')
+
 
 def verify(username, password):
     if not (username and password):
@@ -40,58 +43,85 @@ jwt = JWT(app, verify, identity)
 
 
 class Bucketlist(Resource):
+
+    # @jwt_required()
+    '''Describing elephants'''
     @swagger.operation(
-        notes='delete a todo item by ID',
+        notes='some really good notes',
+        responseClass='ModelClass.__name__',
+        nickname='upload',
+        parameters=[
+            {
+                "name": "body",
+                "description": "blueprint object that needs to be added. YAML.",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'ModelClass2.__name__',
+                "paramType": "body"
+            }
+        ],
+        responseMessages=[
+            {
+                "code": 201,
+                "message": "Created. The URL of the created blueprint should be in the Location header"
+            },
+            {
+                "code": 405,
+                "message": "Invalid input"
+            }
+        ]
     )
-    @jwt_required()
     def get(self, **kwargs):
         limit = request.args.get('limit')
         search = request.args.get('q')
         if limit:
             response = bucket.get_all_buckets_with_limit(
-                limit, session.get('user_id'))
+                limit, 1)
             return response
 
         elif search:
-            response = bucket.get_all_buckets_with_limit_query(search, limit, session.get('user_id'))
+            response = bucket.get_all_buckets_with_limit_query(
+                search, limit, 1)
             return response
 
         elif kwargs.get("bucket_id") is not None:
-            response = bucket.get_bucket(kwargs['bucket_id'], session.get('user_id'))
+            response = bucket.get_bucket(kwargs['bucket_id'], 1)
 
         else:
-            response = bucket.get_bucket_list_by_id(session.get('user_id'))
+            response = bucket.get_bucket_list_by_id(1)
         return jsonify({"response": response})
 
-    @swagger.operation(
-        notes='delete a todo item by bucket_id',
-    )
-    @jwt_required()
+    # @jwt_required()
     def delete(self, **kwargs):
         response = bucket.delete(kwargs['bucket_id'])
-        return response
-
-    @swagger.operation(
-        notes='delete a todo item by ID',
-    )
-    @jwt_required()
-    def post(self, **kwargs):
-        data = request.get_json()
-        bucket_name = data["bucket_name"]
-        bucket_description = data["bucket_description"]
-        user_id = session['user_id']
-        response = bucket.create_bucketlist(
-            bucket_name=bucket_name, bucket_description=bucket_description, user_id=user_id)
         return jsonify({"response": response})
 
-    @swagger.operation(
-        notes='delete a todo item by ID',
-    )
-    @jwt_required()
+    # @jwt_required()
+    def post(self, **kwargs):
+        data = None
+        try:
+            data = request.get_json()
+            data['bucket_name']
+        except:
+            data = json.loads(request.data.decode('UTF-8'))
+        bucket_name = data["bucket_name"]
+        bucket_description = data["bucket_description"]
+        # user_id = session['user_id']
+        response = bucket.create_bucketlist(
+            bucket_name=bucket_name, bucket_description=bucket_description, user_id=data["user_id"])
+        return jsonify({"response": response})
+
+    # @jwt_required()
     def put(self, bucket_id):
+        data = None
+        try:
+            data = request.get_json()
+            data['bucket_name']
+        except:
+            data = json.loads(request.data.decode('UTF-8'))
         response = bucket.update(
-            bucket_id=bucket_id, bucket_name='james', bucket_description='Mathew')
-        updated_response = bucket.get_bucket(bucket_id)
+            bucket_id=bucket_id, bucket_name=data["bucket_name"], bucket_description=data["bucket_description"])
+        updated_response = bucket.get_bucket(bucket_id, 1)
         response_information = ''
         if response is True:
             response_information = updated_response
@@ -101,10 +131,8 @@ class Bucketlist(Resource):
 
 
 class BucketlistItems(Resource):
-    @swagger.operation(
-        notes='delete a todo item by ID',
-    )
-    @jwt_required()
+
+    # @jwt_required()
     def get(self, **kwargs):
         limit = request.args.get('limit')
         q = request.args.get('q')
@@ -123,12 +151,14 @@ class BucketlistItems(Resource):
             response = item.get_items(kwargs.get("bucket_id"))
         return jsonify({"response": response})
 
-    @swagger.operation(
-        notes='delete a todo item by ID',
-    )
-    @jwt_required()
+    # @jwt_required()
     def post(self, bucket_id):
-        data = request.get_json()
+        data = None
+        try:
+            data = request.get_json()
+            data['bucket_name']
+        except:
+            data = json.loads(request.data.decode('UTF-8'))
         item_name = data['item_name']
         item_status = data['item_status']
         due_date = data['due_date']
@@ -136,20 +166,19 @@ class BucketlistItems(Resource):
             item_name=item_name, item_status=item_status, due_date=due_date, bucket_id=bucket_id)
         return jsonify({"response": response})
 
-    @swagger.operation(
-        notes='delete a todo item by ID',
-    )
-    @jwt_required()
+    # @jwt_required()
     def delete(self, bucket_id, item_id):
         response = item.delete_item(bucket_id, item_id)
         return jsonify({"response": response})
 
-    @swagger.operation(
-        notes='delete a todo item by ID',
-    )
-    @jwt_required()
+    # @jwt_required()
     def put(self, bucket_id, item_id):
-        data = request.get_json()
+        data = None
+        try:
+            data = request.get_json()
+            data['bucket_name']
+        except:
+            data = json.loads(request.data.decode('UTF-8'))
         item_name = data['item_name']
         item_status = data['item_status']
         due_date = data['due_date']
@@ -160,13 +189,18 @@ class BucketlistItems(Resource):
 
 class Users(Resource):
 
-    @jwt_required()
+    # @jwt_required()
     def get(self, **kwargs):
         response = user.get_all()
         return jsonify({"response": response})
 
     def post(self, **kwargs):
-        data = request.get_json()
+        data = None
+        try:
+            data = request.get_json()
+            data['name']
+        except:
+            data = json.loads(request.data.decode('UTF-8'))
         name = data["name"]
         username = data["username"]
         email = data["email"]
@@ -188,4 +222,3 @@ api.add_resource(Bucketlist, '/api/v01/bucketlists/<int:bucket_id>/',
 
 api.add_resource(Users, '/api/v01/user/<int:user_id>/',
                  '/api/v01/user/', endpoint='user')
-
