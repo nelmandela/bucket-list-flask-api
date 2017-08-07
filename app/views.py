@@ -42,6 +42,10 @@ def identity(payload):
 jwt = JWT(app, verify, identity)
 
 
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+
 class Bucketlist(Resource):
 
     # @jwt_required()
