@@ -15,7 +15,7 @@ class BaseTest(unittest.TestCase):
         # setup test environment configuration
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test_buckects.db'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test_buckects_enpoints.db'
         self.client = app.test_client()
         self.u = UserStore()
         self.user = dict(name="josiah", username="james",
