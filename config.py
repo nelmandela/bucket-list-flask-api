@@ -1,6 +1,6 @@
 DEBUG = False
 SECRET_KEY = '123456789'
-DATABASE_URI = 'postgresql:///bucket'
+DATABASE_URI = 'postgresql://localhost/bucket'
 
 
 class Config(object):
