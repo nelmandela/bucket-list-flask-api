@@ -1,11 +1,7 @@
 import unittest
-import uuid
-import random
 import json
-import requests
-import simplejson
-from app import app
-from app.views import *
+
+from app.view import *
 from app.models.models import db
 from app.models.user_controller import UserStore
 
@@ -14,7 +10,6 @@ class BaseTest(unittest.TestCase):
     def setUp(self):
         # setup test environment configuration
         app.config['TESTING'] = True
-        app.config['WTF_CSRF_ENABLED'] = False
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test_buckects_enpoints.db'
         self.client = app.test_client()
         self.u = UserStore()
@@ -26,9 +21,34 @@ class BaseTest(unittest.TestCase):
                          due_date="pending",  bucket_id=1)
         db.create_all()
 
-        self.headers = {"Content-Type": "application/json"}
-        self.response = self.client.post(
-            '/api/v01/user/', data=json.dumps(self.user))
+        self.u.create_user(name="josiah", username="josiah",
+                           email="j@gmail.com", password_hash=generate_password_hash("flask"))
+
+    def set_header(self):
+        """set header e.g Authorization and Content type"""
+
+        response = self.client.post(
+            '/auth/login',
+            data=json.dumps(dict(
+                username='josiah',
+                password='flask'
+            )),
+            content_type='application/json'
+        )
+        data = json.loads(response.data.decode())
+
+        # A Token is needed to restrict access to certain resources
+        # If not included it will result in a 401: Unauthorized Access error.
+
+        self.token = data['access_token']
+
+        # # Helps json to accept a JSON encoded entity from the request body.
+        # # Token prefix comes before the token
+
+        return{'Authorization': 'JWT ' + self.token,
+               'Content-Type': 'application/json',
+               'Accept': 'application/json',
+               }
 
     def tearDown(self):
         db.session.remove
