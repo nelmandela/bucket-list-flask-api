@@ -2,9 +2,7 @@
 from sqlalchemy.exc import IntegrityError
 
 from app.models.models import BucketlistItems
-from app import app
 from app.models.models import db
-import re
 
 
 class ItemStore(object):
@@ -14,24 +12,28 @@ class ItemStore(object):
 
     def create_bucketlistitem(self, **kwargs):
         ''' creates a new bucket item '''
-        message = ''
+        item = {}
         try:
             if '' not in [kwargs['item_name'],
                           kwargs['item_status'],
                           kwargs['due_date'],
                           kwargs['bucket_id']]:
-                bucket = BucketlistItems(
+                bucketitems = BucketlistItems(
                     kwargs['item_name'], kwargs['item_status'], kwargs['due_date'], kwargs['bucket_id'])
-                db.session.add(bucket)
+                db.session.add(bucketitems)
                 db.session.commit()
-                message = 'Bucketlist item successfully added to user.'
+                item['status_code'] = 201
+                item['response'] = 'Bucketlist item successfully added to user.'
             else:
-                message = 'All fields are required'
+                item['status_code'] = 400
+                item['response'] = 'All fields are required'
         except IntegrityError as e:
-            message = 'Item name already exists.'
+            item['status_code'] = 400
+            item['response'] = 'Item name already exists.'
         except Exception as e:
-            message = 'Bucket does not exist'
-        return message
+            item['status_code'] = 404
+            item['response'] = 'Bucket does not exist'
+        return item
 
     def get_item_by_id(self, bucket_id, item_id):
         ''' returns bucket item by id '''
@@ -39,7 +41,14 @@ class ItemStore(object):
         try:
             item = BucketlistItems.query.filter_by(
                 bucket_id=bucket_id, item_id=item_id).first()
-            response = self.item_obj_unpacks(item)
+            item_list = []
+            item_dict = {}
+            item_dict['item_name'] = item.item_name
+            item_dict['item_status'] = item.item_status
+            item_dict['due_date'] = item.due_date
+            item_dict['bucket_id'] = item.bucket_id
+            item_list.append(item_dict)
+            response = item_list
         except:
             response = 'Bucketlist item not found.'
         return response
@@ -67,7 +76,7 @@ class ItemStore(object):
         item_list = []
         for page in paginate_obj.items:
             item_container = {}
-            item_container['item_status'] = page.item_status
+            item_container['item_name'] = page.item_name
             item_container['item_status'] = page.item_status
             item_container['due_date'] = page.due_date
             item_container['bucket_id'] = page.bucket_id
@@ -90,28 +99,33 @@ class ItemStore(object):
 
     def delete_item(self, bucket_id, item_id):
         ''' deletes an item from a bucketlist '''
-        message = ""
+        item = {}
         try:
-            item = BucketlistItems.query.filter_by(
+            items = BucketlistItems.query.filter_by(
                 bucket_id=bucket_id, item_id=item_id).first()
-            db.session.delete(item)
+            db.session.delete(items)
             db.session.commit()
-            message = "Bucketlist item successfully deleted."
+            item['response'] = "Bucketlist item successfully deleted."
+            item['status_code'] = 200
         except:
-            message = "Bucketlist item does not exist."
-        return message
+            item['response'] = "Bucketlist item does not exist."
+            item['status_code'] = 404
+        return item
 
     def update_item(self, **kwargs):
         ''' updates bucketlist item '''
-        message = False
+        item = {}
         try:
-            item = BucketlistItems.query.filter_by(
+            items = BucketlistItems.query.filter_by(
                 bucket_id=kwargs['bucket_id'], item_id=kwargs['item_id']).first()
-            item.item_name = kwargs['item_name']
-            item.item_status = kwargs['item_status']
-            item.due_date = kwargs['due_date']
+            items.item_name = kwargs['item_name']
+            items.item_status = kwargs['item_status']
+            items.due_date = kwargs['due_date']
             db.session.commit()
-            message = "Item successfully updated "
+
+            item['response'] = "Item successfully updated "
+            item['status_code'] = 200
         except:
-            message = "Bucketlist item does not exist"
-        return message
+            item['response'] = "Bucketlist item does not exist"
+            item['status_code'] = 404
+        return item

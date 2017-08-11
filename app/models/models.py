@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+
 from app import app
 
 db = SQLAlchemy(app)
@@ -25,6 +26,7 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+
 
 
 class Bucketlist(db.Model):

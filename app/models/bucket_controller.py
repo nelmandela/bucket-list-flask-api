@@ -9,7 +9,7 @@ class BucketStore(object):
 
     def create_bucketlist(self, **kwargs):
         ''' creates a new bucketlist '''
-        message = ''
+        buckets = {}
         try:
             if '' not in [kwargs['bucket_name'],
                           kwargs['bucket_description'],
@@ -20,23 +20,25 @@ class BucketStore(object):
                     kwargs['user_id'])
                 db.session.add(bucket)
                 db.session.commit()
-                message = 'Bucket successfully added to user.'
+                buckets['status_code'] = 201
+                buckets['response'] = 'Bucket successfully added to user.'
             else:
-                message = 'All fields are required'
-        except Exception as e:
-            message = 'Bucket not created'
-        return message
+                buckets['status_code'] = 400
+                buckets['response'] = 'All fields are required'
+        except:
+            buckets['status_code'] = 400
+            buckets['response'] = 'Bucket not created'
+        return buckets
 
     def get_bucket(self, bucket_id, user_id):
         ''' gets bucketlist by id '''
-        response = None
         try:
             data = Bucketlist.query.filter_by(
                 bucket_id=bucket_id, user_id=user_id).all()
             print(data)
             response = self.bucket_obj_unpacks(data)
         except Exception as e:
-            response = 'Bucket not found' + str(e)
+            pass
         return response
 
     def bucket_obj_unpacks(self, data):
@@ -82,15 +84,17 @@ class BucketStore(object):
 
     def delete(self, id):
         ''' deletes  one bucketlist '''
-        message = ""
+        bucket = {}
         try:
             data = Bucketlist.query.filter_by(bucket_id=id).first()
             db.session.delete(data)
             db.session.commit()
-            message = "Bucket successfully deleted."
+            bucket['status_code'] = 200
+            bucket['response'] = "Bucket successfully deleted."
         except:
-            message = "Bucket does not exist."
-        return message
+            bucket['status_code'] = 404
+            bucket['response'] = "Bucket does not exist."
+        return bucket
 
     def get_bucket_list_by_id(self, user_id):
         ''' '''
@@ -99,14 +103,16 @@ class BucketStore(object):
 
     def update(self, **kwargs):
         ''' updates bucketlist '''
-        message = False
+        buckets = {}
         try:
             bucket = Bucketlist.query.filter_by(
                 bucket_id=kwargs['bucket_id']).first()
             bucket.bucket_name = kwargs['bucket_name']
             bucket.bucket_descriptions = kwargs['bucket_description']
             db.session.commit()
-            message = True
+            buckets['response'] = True
+            buckets['status_code'] = 200
         except:
-            message = False
-        return message
+            buckets['response'] = False
+            buckets['status_code'] = 404
+        return buckets
