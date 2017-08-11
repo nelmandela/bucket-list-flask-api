@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../healths/chore/bucket-list-flask-api/.idea/bucket-list-flask-api.iml" filepath="$PROJECT_DIR$/../healths/chore/bucket-list-flask-api/.idea/bucket-list-flask-api.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../healthchecks-lycan-clan/.idea/healthchecks-lycan-clan.iml" filepath="$PROJECT_DIR$/../healthchecks-lycan-clan/.idea/healthchecks-lycan-clan.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/bucket-list-flask-api.iml" filepath="$PROJECT_DIR$/.idea/bucket-list-flask-api.iml" />
     </modules>
   </component>
 </project>
