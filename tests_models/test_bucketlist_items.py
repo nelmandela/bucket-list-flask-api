@@ -2,8 +2,7 @@
 from app.models.items_controller import ItemStore
 from app.models.bucket_controller import BucketStore
 
-from app.models.models import db
-from app import app
+
 from tests_models.base import BaseTest
 item = ItemStore()
 bucket = BucketStore()
@@ -20,8 +19,9 @@ class BucketItemsTestCase(BaseTest):
                                               item_status='pending',
                                               due_date='12-03-2017',
                                               bucket_id='1')
+        print(response)
         self.assertEqual(
-            response, 'Bucketlist item successfully added to user.')
+            response, {'response': 'Bucketlist item successfully added to user.', 'status_code': 201})
 
     def test_pagination_in_bucketlists_items(self):
         bucket.create_bucketlist(bucket_name='Journey to the moon',
@@ -57,19 +57,18 @@ class BucketItemsTestCase(BaseTest):
         self.assertEquals(len(rv), 1)
 
 
-    # def test_update_bucketlistitems(self):
-    #     bucket.create_bucketlist(bucket_name='Journey to the moon',
-    #                              bucket_description='use a rocket to fly', user_id=1)
-    #     item.create_bucketlistitem(item_name='Journey to the Africa',
-    #                                item_status='pending',
-    #                                due_date='12-08-2019', bucket_id=1)
-    #     item.update_item(item_name='trip to china',
-    #                      item_status='done',
-    #                      due_date='12-03-2007',
-    #                      bucket_id=1)
-    #     rv = item.get_item_by_id(0, 1)
-    #     print(rv)
-    #     self.assertEqual(rv[0].get('item_name'), 'Journey to the Africa')
+    def test_update_bucketlistitems(self):
+        bucket.create_bucketlist(bucket_name='Journey to the moon',
+                                 bucket_description='use a rocket to fly', user_id=1)
+        item.create_bucketlistitem(item_name='Journey to the Africa',
+                                   item_status='pending',
+                                   due_date='12-08-2019', bucket_id=1)
+        item.update_item(item_name='trip to china',
+                         item_status='done',
+                         due_date='12-03-2007',
+                         bucket_id=1)
+        rv = item.get_item_by_id(1, 1)
+        self.assertEqual(rv[0].get('item_name'), 'Journey to the Africa')
 
     def test_empty_item_name(self):
         bucket.create_bucketlist(bucket_name='Journey to the moon',
@@ -78,7 +77,7 @@ class BucketItemsTestCase(BaseTest):
                                         item_status='pending',
                                         due_date='12-08-2019',
                                         bucket_id=1)
-        self.assertEqual(rv, 'All fields are required')
+        self.assertEqual(rv, {'response': 'All fields are required', 'status_code': 400})
 
     def test_invalid_item_update(self):
         bucket.create_bucketlist(bucket_name='Journey to the moon',
@@ -91,7 +90,7 @@ class BucketItemsTestCase(BaseTest):
                               item_status='done',
                               due_date='12-03-2007',
                               bucket_id=2)
-        self.assertEqual(rv, 'Bucketlist item does not exist')
+        self.assertEqual(rv, {'response': 'Bucketlist item does not exist', 'status_code': 404})
 
     def tearDown(self):
         super(BucketItemsTestCase, self).tearDown()

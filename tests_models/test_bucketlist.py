@@ -1,9 +1,4 @@
 #!flask/bin/python
-import unittest
-from werkzeug.security import generate_password_hash, check_password_hash
-
-from app import app
-from app.models.models import db
 from tests_models.base import BaseTest
 from app.models.bucket_controller import BucketStore
 
@@ -17,7 +12,7 @@ class BucketTestCase(BaseTest):
     def test_create_bucketlist(self):
         response = bucket.create_bucketlist(bucket_name='Journey to the moon',
                                             bucket_description='use a rocket to fly', user_id=1)
-        assert response == 'Bucket successfully added to user.'
+        assert response == {'response': 'Bucket successfully added to user.', 'status_code': 201}
 
     def test_get_bucketlist_by_id(self):
         bucket.create_bucketlist(bucket_name='Journey to the moon',
@@ -73,7 +68,7 @@ class BucketTestCase(BaseTest):
         response = bucket.create_bucketlist(bucket_name='',
                                             bucket_description='use a aeroplane to travel', user_id=1)
 
-        assert(response == 'All fields are required')
+        assert(response == {'response': 'All fields are required', 'status_code': 400})
 
     def test_invalid_item_update(self):
         bucket.create_bucketlist(bucket_name='trip to the usa',
@@ -81,7 +76,7 @@ class BucketTestCase(BaseTest):
 
         response = bucket.update(bucket_name='trip to china',
                                  bucket_description='use a train', bucket_id=2)
-        assert response == False
+        assert response == {'response': False, 'status_code': 404}
 
     def test_no_duplicates_in_bucketlists(self):
         bucket.create_bucketlist(bucket_name='trip to china',
@@ -89,7 +84,7 @@ class BucketTestCase(BaseTest):
 
         response = bucket.create_bucketlist(bucket_name='trip to china',
                                             bucket_description='use a train', bucket_id=2)
-        assert response == 'Bucket not created'
+        assert response == {'response': 'Bucket not created', 'status_code': 400}
 
     def tearDown(self):
         super(BucketTestCase, self).tearDown()
