@@ -1,4 +1,3 @@
-
 import json
 from tests_endpoints.base_testcase import BaseTest
 
@@ -16,17 +15,33 @@ class TestCaseBucketItems(BaseTest):
         self.client.post('/bucketlist/1/items/',
                          data=json.dumps(self.item), headers=self.set_header())
         rv = self.client.get('/bucketlist/1/items/', headers=self.set_header())
-        print(rv.data.decode())
+        self.assertEqual(json.loads(rv.data.decode()),
+                         [
+            {
+                "bucket_id": 1,
+                "due_date": "pending",
+                "item_name": "Swim",
+                "item_status": "test item"
+            }
+        ]
+        )
+
+    def test_create_bucketlistItem_with_empty_fields(self):
+        self.client.post(
+            '/bucketlists/', data=json.dumps(self.bucket), headers=self.set_header())
+        self.empty_item = dict(item_name="", item_status="",
+                               due_date="",  bucket_id=1)
+        rv = self.client.post('/bucketlist/1/items/',
+                              data=json.dumps(self.empty_item), headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()), {
-            "response": [
-                {
-                    "bucket_id": 1,
-                    "due_date": "pending",
-                    "item_name": "Swim",
-                    "item_status": "test item"
-                }
-            ]
-        })
+                         'status_code': 400, 'response': 'All fields are required'})
+
+    def test_create_bucketlistItem_with_unavailable_bucket(self):
+
+        rv = self.client.post('/bucketlist/4/items/',
+                              data=json.dumps(self.item), headers=self.set_header())
+        self.assertEqual(json.loads(rv.data.decode()), {
+                         'response': 'Bucket does not exist', 'status_code': 404})
 
     def test_get_with_query_bucketlistItem(self):
         self.client.post(
@@ -35,16 +50,16 @@ class TestCaseBucketItems(BaseTest):
                          data=json.dumps(self.item), headers=self.set_header())
         rv = self.client.get('/bucketlist/1/items/?q=Swim',
                              headers=self.set_header())
-        self.assertEqual(json.loads(rv.data.decode()), {
-            "response": [
-                {
-                    "bucket_id": 1,
-                    "due_date": "pending",
-                    "item_name": "Swim",
-                    "item_status": "test item"
-                }
-            ]
-        })
+        self.assertEqual(json.loads(rv.data.decode()),
+                         [
+            {
+                "bucket_id": 1,
+                "due_date": "pending",
+                "item_name": "Swim",
+                "item_status": "test item"
+            }
+        ]
+        )
 
     def test_get_bucketlistItem(self):
         self.client.post(
@@ -52,16 +67,22 @@ class TestCaseBucketItems(BaseTest):
         self.client.post('/bucketlist/1/items/',
                          data=json.dumps(self.item), headers=self.set_header())
         rv = self.client.get('/bucketlist/1/items/', headers=self.set_header())
+        self.assertEqual(json.loads(rv.data.decode()),
+                         [
+            {
+                "bucket_id": 1,
+                "due_date": "pending",
+                "item_name": "Swim",
+                "item_status": "test item"
+            }
+        ]
+        )
+
+    def test_get_unavailable_bucketlistItem(self):
+        rv = self.client.get('/bucketlist/1/item/1/',
+                             headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()), {
-            "response": [
-                {
-                    "bucket_id": 1,
-                    "due_date": "pending",
-                    "item_name": "Swim",
-                    "item_status": "test item"
-                }
-            ]
-        })
+                         "response": "Bucketlist item not found."})
 
     def test_get_with_query_and_limit_bucketlistItem(self):
         self.client.post(
@@ -70,16 +91,16 @@ class TestCaseBucketItems(BaseTest):
                          data=json.dumps(self.item), headers=self.set_header())
         rv = self.client.get(
             '/bucketlist/1/items/?q=Swim&&limit=2', headers=self.set_header())
-        self.assertEqual(json.loads(rv.data.decode()), {
-            "response": [
-                {
-                    "bucket_id": 1,
-                    "due_date": "pending",
-                    "item_name": "Swim",
-                    "item_status": "test item"
-                }
-            ]
-        })
+        self.assertEqual(json.loads(rv.data.decode()),
+                         [
+            {
+                "bucket_id": 1,
+                "due_date": "pending",
+                "item_name": "Swim",
+                "item_status": "test item"
+            }
+        ]
+        )
 
     def test_get_with_limit_bucketlistItem(self):
         self.client.post(
@@ -88,22 +109,22 @@ class TestCaseBucketItems(BaseTest):
                          data=json.dumps(self.item), headers=self.set_header())
         rv = self.client.get('/bucketlist/1/items/?limit=2',
                              headers=self.set_header())
-        self.assertEqual(json.loads(rv.data.decode()), {
-            "response": [
-                {
-                    "bucket_id": 1,
-                    "due_date": "pending",
-                    "item_name": "Swim",
-                    "item_status": "test item"
-                }
-            ]
-        })
+        self.assertEqual(json.loads(rv.data.decode()),
+                         [
+            {
+                "bucket_id": 1,
+                "due_date": "pending",
+                "item_name": "Swim",
+                "item_status": "test item"
+            }
+        ]
+        )
 
     def test_delete_bucketlistItem(self):
         self.client.post(
-            '/bucketlist/', data=json.dumps(self.bucket), headers=self.set_header())
-        self.client.post('/bucketlist/1/items/',
-                         data=json.dumps(self.item), headers=self.set_header())
+            '/bucketlists/', data=json.dumps(self.bucket), headers=self.set_header())
+        response = self.client.post('/bucketlist/1/items/',
+                                    data=json.dumps(self.item), headers=self.set_header())
         rv = self.client.delete('/bucketlist/1/item/1/',
                                 headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()),
@@ -111,7 +132,7 @@ class TestCaseBucketItems(BaseTest):
 
     def test_update_bucketlistItem(self):
         self.client.post(
-            '/bucketlist/', data=json.dumps(self.bucket), headers=self.set_header())
+            '/bucketlists/', data=json.dumps(self.bucket), headers=self.set_header())
         self.client.post('/bucketlist/1/items/',
                          data=json.dumps(self.item), headers=self.set_header())
         self.update_item = dict(item_name="Drink salt-water",
