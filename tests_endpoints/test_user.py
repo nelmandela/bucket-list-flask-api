@@ -116,10 +116,10 @@ class TestCaseBucketItems(BaseTest):
     def test_access_resource_without_token(self):
         rv = self.client.get(
             '/bucketlists/', headers=self.header_with_no_authetication())
-        self.assertEqual(rv._status_code, 500)
+        self.assertEqual(rv._status_code, 401)
 
     def test_access_resource_with_token(self):
 
         rv = self.client.get(
             '/bucketlists/', headers=self.set_header())
-        self.assertEqual(rv._status_code, 200)
+        self.assertEqual(rv._status_code, 201)
