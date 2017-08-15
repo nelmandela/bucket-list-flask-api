@@ -1,4 +1,4 @@
-from app.models.models import Bucketlist
+from app.models.models import Bucketlist, User
 from app.models.models import db
 
 
@@ -14,31 +14,33 @@ class BucketStore(object):
             if '' not in [kwargs['bucket_name'],
                           kwargs['bucket_description'],
                           kwargs['user_id']]:
-                bucket = Bucketlist(
-                    kwargs['bucket_name'],
-                    kwargs['bucket_description'],
-                    kwargs['user_id'])
-                db.session.add(bucket)
-                db.session.commit()
-                buckets['status_code'] = 201
-                buckets['response'] = 'Bucket successfully added to user.'
+                # check if user exists
+                user = User.query.filter_by(
+                    id=kwargs['user_id']).all()
+                if len(user) == 0:
+                    buckets['status_code'] = 404
+                    buckets['response'] = 'user does not exist'
+                else:
+                    bucket = Bucketlist(
+                        kwargs['bucket_name'],
+                        kwargs['bucket_description'],
+                        kwargs['user_id'])
+                    db.session.add(bucket)
+                    db.session.commit()
+                    buckets['status_code'] = 201
+                    buckets['response'] = 'Bucket successfully added to user.'
             else:
                 buckets['status_code'] = 400
                 buckets['response'] = 'All fields are required'
-        except:
-            buckets['status_code'] = 400
-            buckets['response'] = 'Bucket not created'
+        except Exception as e:
+            pass
         return buckets
 
     def get_bucket(self, bucket_id, user_id):
         ''' gets bucketlist by id '''
-        try:
-            data = Bucketlist.query.filter_by(
-                bucket_id=bucket_id, user_id=user_id).all()
-            print(data)
-            response = self.bucket_obj_unpacks(data)
-        except Exception as e:
-            pass
+        data = Bucketlist.query.filter_by(
+            bucket_id=bucket_id, user_id=user_id).all()
+        response = self.bucket_obj_unpacks(data)
         return response
 
     def bucket_obj_unpacks(self, data):
