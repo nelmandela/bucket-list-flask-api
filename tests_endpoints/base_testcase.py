@@ -10,7 +10,7 @@ class BaseTest(unittest.TestCase):
     def setUp(self):
         # setup test environment configuration
         app.config['TESTING'] = True
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///bucket_test'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bucket_test.db'
         self.client = app.test_client()
         self.u = UserStore()
         self.item = dict(item_name="Swim", item_status="test item",
