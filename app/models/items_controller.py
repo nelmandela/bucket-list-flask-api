@@ -1,7 +1,7 @@
 # from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
 
-from app.models.models import BucketlistItems
+from app.models.models import BucketlistItems, Bucketlist
 from app.models.models import db
 
 
@@ -13,31 +13,30 @@ class ItemStore(object):
     def create_bucketlistitem(self, **kwargs):
         ''' creates a new bucket item '''
         item = {}
-        try:
-            if '' not in [kwargs['item_name'],
-                          kwargs['item_status'],
-                          kwargs['due_date'],
-                          kwargs['bucket_id']]:
-                bucketitems = BucketlistItems(
-                    kwargs['item_name'], kwargs['item_status'], kwargs['due_date'], kwargs['bucket_id'])
-                db.session.add(bucketitems)
-                db.session.commit()
-                item['status_code'] = 201
-                item['response'] = 'Bucketlist item successfully added to user.'
+        if '' not in [kwargs['item_name'],
+                        kwargs['item_status'],
+                        kwargs['due_date'],
+                        kwargs['bucket_id']]:
+            check_id = Bucketlist.query.filter_by(
+                bucket_id=kwargs['bucket_id']).all()
+            if len(check_id) > 0:      
+                    bucketitems = BucketlistItems(
+                        kwargs['item_name'], kwargs['item_status'], kwargs['due_date'], kwargs['bucket_id'])
+                    db.session.add(bucketitems)
+                    db.session.commit()
+                    item['status_code'] = 201
+                    item['response'] = 'Bucketlist item successfully added to user.'
+
             else:
-                item['status_code'] = 400
-                item['response'] = 'All fields are required'
-        except IntegrityError as e:
+                item['status_code'] = 404
+                item['response'] = 'Bucket does not exist'
+        else:
             item['status_code'] = 400
-            item['response'] = 'Item name already exists.'
-        except Exception as e:
-            item['status_code'] = 404
-            item['response'] = 'Bucket does not exist'
+            item['response'] = 'All fields are required'
         return item
 
     def get_item_by_id(self, bucket_id, item_id):
         ''' returns bucket item by id '''
-        response = None
         try:
             item = BucketlistItems.query.filter_by(
                 bucket_id=bucket_id, item_id=item_id).first()
@@ -50,7 +49,7 @@ class ItemStore(object):
             item_list.append(item_dict)
             response = item_list
         except:
-            response = 'Bucketlist item not found.'
+            response = {'response': 'Bucketlist item not found.'}
         return response
 
     def get_items(self, bucket_id):
