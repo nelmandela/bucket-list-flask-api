@@ -11,9 +11,9 @@ migrate = Migrate(app, db)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    username = db.Column(db.String)
+    username = db.Column(db.String, unique=True)
     password = db.Column(db.String)
-    email = db.Column(db.String)
+    email = db.Column(db.String, unique=True)
     buckets = db.relationship('Bucketlist', backref='user',
                               lazy='dynamic')
 
@@ -48,7 +48,7 @@ class Bucketlist(db.Model):
 
 class BucketlistItems(db.Model):
     item_id = db.Column(db.Integer, primary_key=True)
-    item_name = db.Column(db.String, unique=True)
+    item_name = db.Column(db.String)
     item_status = db.Column(db.String)
     due_date = db.Column(db.String)
     bucket_id = db.Column(db.Integer, db.ForeignKey('bucketlist.bucket_id'))
