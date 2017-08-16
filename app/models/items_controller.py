@@ -93,7 +93,7 @@ class ItemStore(object):
     def get_all_buckets_with_search_limit(self, bucket_id, limit, q):
         '''  gets all bucketlist items by id and returns a pagination object'''
         paginate = BucketlistItems.query.filter(
-            BucketlistItems.bucket_id == bucket_id, BucketlistItems.item_name == q).paginate(page=1, per_page=int(limit))
+            BucketlistItems.bucket_id == bucket_id, BucketlistItems.item_name.like(q+'%')).paginate(page=1, per_page=int(limit))
         return self.item_paginate(paginate)
 
     def delete_item(self, bucket_id, item_id):
