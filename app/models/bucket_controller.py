@@ -80,8 +80,9 @@ class BucketStore(object):
             search_limit = limit
 
         paginate = Bucketlist.query.filter(
-            Bucketlist.bucket_name == q).paginate(page=1,
+            Bucketlist.bucket_name.like(q+'%')).paginate(page=1,
                                                   per_page=int(search_limit))
+        print(paginate)
         return self.bucket_paginate(paginate)
 
     def delete(self, id):
