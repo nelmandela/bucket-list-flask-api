@@ -1,7 +1,8 @@
 # bucketlist-api
 
 [![Build Status](https://travis-ci.org/jmnyarega/bucket_list_app.svg?branch=develop)](https://travis-ci.org/jmnyarega/bucket_list_app)
-[![Coverage Status](https://coveralls.io/repos/github/jmnyarega/bucket-list-flask-api/badge.svg?branch=master)](https://coveralls.io/github/jmnyarega/bucket-list-flask-api?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/jmnyarega/bucket-list-flask-api/badge.svg?branch=master)](https://coveralls.io/github/jmnyarega/bucket-list-flask-api?branch=develop)
+
 
 ## What the bucketlist api does
 Allows users  to record and share things they want to achieve or experience before reaching a certain age, meeting the needs of, keeping track of their dreams and goals.
@@ -61,7 +62,7 @@ Allows users  to record and share things they want to achieve or experience befo
 3. _python  manage.py db upgrade_
 
 ## Starting the server
-- On the root directory, run `python app.py`
+- On the root directory, run `python manage.py runserver`
 
 >> **The server should be running on [http://127.0.0.1:5000]**
 
