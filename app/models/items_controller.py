@@ -14,18 +14,18 @@ class ItemStore(object):
         ''' creates a new bucket item '''
         item = {}
         if '' not in [kwargs['item_name'],
-                        kwargs['item_status'],
-                        kwargs['due_date'],
-                        kwargs['bucket_id']]:
+                      kwargs['item_status'],
+                      kwargs['due_date'],
+                      kwargs['bucket_id']]:
             check_id = Bucketlist.query.filter_by(
                 bucket_id=kwargs['bucket_id']).all()
-            if len(check_id) > 0:      
-                    bucketitems = BucketlistItems(
-                        kwargs['item_name'], kwargs['item_status'], kwargs['due_date'], kwargs['bucket_id'])
-                    db.session.add(bucketitems)
-                    db.session.commit()
-                    item['status_code'] = 201
-                    item['response'] = 'Bucketlist item successfully added to user.'
+            if len(check_id) > 0:
+                bucketitems = BucketlistItems(
+                    kwargs['item_name'], kwargs['item_status'], kwargs['due_date'], kwargs['bucket_id'])
+                db.session.add(bucketitems)
+                db.session.commit()
+                item['status_code'] = 201
+                item['response'] = 'Bucketlist item successfully added to user.'
 
             else:
                 item['status_code'] = 404
@@ -90,11 +90,23 @@ class ItemStore(object):
             BucketlistItems.bucket_id == bucket_id).paginate(page=1, per_page=int(limit))
         return self.item_paginate(paginate)
 
-    def get_all_buckets_with_search_limit(self, bucket_id, limit, q):
+    def get_all_buckets_with_search_limit(self, bucket_id, limit, q, page):
         '''  gets all bucketlist items by id and returns a pagination object'''
-        paginate = BucketlistItems.query.filter(
-            BucketlistItems.bucket_id == bucket_id, BucketlistItems.item_name.like(q+'%')).paginate(page=1, per_page=int(limit))
-        return self.item_paginate(paginate)
+        if limit is None:
+            limit = 1
+        elif page is None:
+            page = 1
+        try:
+
+            if q:
+                paginate = BucketlistItems.query.filter(
+                    BucketlistItems.bucket_id == bucket_id, BucketlistItems.item_name.like(q + '%')).paginate(page=int(page), per_page=int(limit))
+            else:
+                paginate = BucketlistItems.query.filter(
+                    BucketlistItems.bucket_id == bucket_id).paginate(page=int(page), per_page=int(limit))
+            return self.item_paginate(paginate)
+        except:
+            return {"message": "Bucketlist item not found "}
 
     def delete_item(self, bucket_id, item_id):
         ''' deletes an item from a bucketlist '''
