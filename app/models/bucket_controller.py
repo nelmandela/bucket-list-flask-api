@@ -35,7 +35,7 @@ class BucketStore(object):
         except Exception as e:
             pass
         return buckets
-
+        
     def get_bucket(self, bucket_id, user_id):
         ''' gets bucketlist by id '''
         data = Bucketlist.query.filter_by(
@@ -67,23 +67,24 @@ class BucketStore(object):
             bucket_list.append(bucket_container)
         return bucket_list
 
-    def get_all_buckets_with_limit(self, limit, user_id):
-        ''' returns paginated bucketlists by user id  '''
-        paginate = Bucketlist.query.filter_by(
-            user_id=user_id).paginate(page=1, per_page=int(limit))
-        return self.bucket_paginate(paginate)
-
-    def get_all_buckets_with_limit_query(self, q, limit, user_id):
+    def get_all_buckets_with_limit_query(self, q=None, limit=1, user_id=1, page=1):
         ''' gets all buckets in a pagination object  '''
-        search_limit = 3
-        if limit:
-            search_limit = limit
 
-        paginate = Bucketlist.query.filter(
-            Bucketlist.bucket_name.like(q+'%')).paginate(page=1,
-                                                  per_page=int(search_limit))
-        print(paginate)
-        return self.bucket_paginate(paginate)
+        if limit is None:
+            limit = 1
+        elif page is None:
+            page = 1
+        try:
+            if q:
+                paginate = Bucketlist.query.filter(
+                    Bucketlist.bucket_name.like(q + '%')).paginate(page=int(page),
+                                                                   per_page=int(limit))
+            else:
+                paginate = Bucketlist.query.paginate(page=int(page),
+                                                     per_page=int(limit))
+            return self.bucket_paginate(paginate)
+        except Exception as e:
+            return {"message": "Bucketlist not found "}
 
     def delete(self, id):
         ''' deletes  one bucketlist '''
