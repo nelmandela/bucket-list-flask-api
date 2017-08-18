@@ -48,7 +48,7 @@ class TestCaseBucketItems(BaseTest):
             '/bucketlists/', data=json.dumps(self.bucket), headers=self.set_header())
         self.client.post('/bucketlist/1/items/',
                          data=json.dumps(self.item), headers=self.set_header())
-        rv = self.client.get('/bucketlist/1/items/?q=Swim',
+        rv = self.client.get('/bucketlist/1/items/?limit=1&q=S',
                              headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()),
                          [

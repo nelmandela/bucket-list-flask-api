@@ -28,7 +28,7 @@ class TestCaseBucket(BaseTest):
     def test_get_with_query_bucketlist(self):
         self.client.post(
             '/bucketlists/', data=json.dumps(self.bucket), headers=self.set_header())
-        rv = self.client.get('/bucketlists/?q=Trip to Mars',
+        rv = self.client.get('/bucketlists/?q=Trip to Mars&page=1',
                              headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()), [
                          {'user_id': 1, 'bucket_id': 1, 'bucket_name': 'Trip to Mars', 'bucket_description': 'test'}])
@@ -52,7 +52,7 @@ class TestCaseBucket(BaseTest):
     def test_get_with_limit_bucketlist(self):
         self.client.post(
             '/bucketlists/', data=json.dumps(self.bucket), headers=self.set_header())
-        rv = self.client.get('/bucketlists/?limit=2',
+        rv = self.client.get('/bucketlists/?limit=1',
                              headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()), [
                          {'user_id': 1, 'bucket_name': 'Trip to Mars', 'bucket_description': 'test', 'bucket_id': 1}])
