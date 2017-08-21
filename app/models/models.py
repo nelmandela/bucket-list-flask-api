@@ -22,11 +22,9 @@ class User(db.Model):
         self.email = email
         self.name = name
         self.password = password
-        # self.public_id = public_id
 
     def __repr__(self):
         return '<User %r>' % self.username
-
 
 
 class Bucketlist(db.Model):
@@ -35,7 +33,7 @@ class Bucketlist(db.Model):
     bucket_descriptions = db.Column(db.String)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     items = db.relationship('BucketlistItems', backref='bucketlist',
-                            lazy='dynamic')
+                            lazy='dynamic', cascade="all, delete-orphan")
 
     def __init__(self, bucket_name, bucket_descriptions, user_id):
         self.bucket_name = bucket_name
@@ -51,7 +49,8 @@ class BucketlistItems(db.Model):
     item_name = db.Column(db.String)
     item_status = db.Column(db.String)
     due_date = db.Column(db.String)
-    bucket_id = db.Column(db.Integer, db.ForeignKey('bucketlist.bucket_id'))
+    bucket_id = db.Column(db.Integer, db.ForeignKey(
+        'bucketlist.bucket_id'))
 
     def __init__(self, item_name, item_status, due_date,  bucket_id):
         self.item_name = item_name
