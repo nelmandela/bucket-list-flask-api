@@ -12,30 +12,28 @@ class BucketStore(object):
     def create_bucketlist(self, **kwargs):
         ''' creates a new bucketlist '''
         response = {}
-        try:
-            if '' not in [kwargs['bucket_name'],
-                          kwargs['bucket_description'],
-                          kwargs['user_id']]:
-                # check if user exists
-                user = User.query.filter_by(
-                    id=kwargs['user_id']).all()
-                if len(user) == 0:
-                    response = make_response(jsonify(
-                        {"message": "user does not exist"}), 404)
-                else:
-                    bucket = Bucketlist(
-                        kwargs['bucket_name'],
+        if '' not in [kwargs['bucket_name'],
                         kwargs['bucket_description'],
-                        kwargs['user_id'])
-                    db.session.add(bucket)
-                    db.session.commit()
-                    response = make_response(jsonify(
-                        {"message": "Bucket successfully added to user"}), 201)
-            else:
+                        kwargs['user_id']]:
+            # check if user exists
+            user = User.query.filter_by(
+                id=kwargs['user_id']).all()
+            if len(user) == 0:
                 response = make_response(jsonify(
-                    {"message": "All fields are required"}), 400)
-        except Exception as e:
-            pass
+                    {"message": "user does not exist"}), 404)
+            else:
+                bucket = Bucketlist(
+                    kwargs['bucket_name'],
+                    kwargs['bucket_description'],
+                    kwargs['user_id'])
+                db.session.add(bucket)
+                db.session.commit()
+                response = make_response(jsonify(
+                    {"message": "Bucket successfully added to user"}), 201)
+        else:
+            response = make_response(jsonify(
+                {"message": "All fields are required"}), 400)
+
         return response
 
     def get_bucket(self, bucket_id, user_id):
@@ -86,17 +84,13 @@ class BucketStore(object):
             page = 1
         else:
             page = int(page)
-        print(user_id)
-        try:
-            if q:
-                paginate = Bucketlist.query.filter(
-                    Bucketlist.bucket_name.like(q + '%'), Bucketlist.user_id == user_id).paginate(page=page, per_page=limit)
-            else:
-                paginate = Bucketlist.query.filter(Bucketlist.user_id==user_id).paginate(page=page,
+        if q:
+            paginate = Bucketlist.query.filter(
+                Bucketlist.bucket_name.like(q + '%'), Bucketlist.user_id == user_id).paginate(page=page, per_page=limit)
+        else:
+            paginate = Bucketlist.query.filter(Bucketlist.user_id == user_id).paginate(page=page,
                                                                                         per_page=limit)
-            return self.bucket_paginate(paginate)
-        except Exception as e:
-            return make_response(jsonify({"message": "Bucketlist not found"}), 404)
+        return self.bucket_paginate(paginate)
 
     def delete(self, id):
         ''' deletes  one bucketlist '''
