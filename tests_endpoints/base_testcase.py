@@ -12,7 +12,7 @@ class BaseTest(unittest.TestCase):
         app.config['TESTING'] = True
         app.config.from_object('config.TestingConfig')
         self.client = app.test_client()
-        self.u = UserStore()
+        self.user_obj = UserStore()
         self.item = dict(item_name="Swim", item_status="test item",
                          due_date="pending",  bucket_id=1)
         self.user = dict(name="josiah", username="james",
@@ -20,8 +20,8 @@ class BaseTest(unittest.TestCase):
         self.bucket = dict(bucket_name="Trip to Mars",
                            bucket_description="test", user_id=1)
         db.create_all()
-        self.u.create_user(name="josiah", username="josiah",
-                           email="j@gmail.com", password_hash=generate_password_hash("flask"))
+        self.user_obj.create_user(name="josiah", username="josiah",
+                                  email="j@gmail.com", password_hash=generate_password_hash("flask"))
 
     def set_header(self):
         """set header e.g Authorization and Content type"""
