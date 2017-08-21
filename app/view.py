@@ -94,8 +94,8 @@ def handle_custom_exception(error):
     return {'message': str(error)}, 401
 
 
-@api.route('/bucketlist/<bucket_id>/', endpoint='bucketlist', methods=['GET', 'PUT', 'DELETE'])
-@api.route('/bucketlists/', endpoint='bucketlists', methods=['POST', 'GET'])
+@api.route('/bucketlist/<bucket_id>/', endpoint='bucketlist',strict_slashes=False , methods=['GET', 'PUT', 'DELETE'])
+@api.route('/bucketlists/',strict_slashes=False, endpoint='bucketlists', methods=['POST', 'GET'])
 class Bucketlist(Resource):
 
     @jwt_required()
@@ -146,8 +146,8 @@ class Bucketlist(Resource):
         return response
 
 
-@api.route('/bucketlist/<bucket_id>/item/<item_id>/', endpoint='item', methods=['GET', 'PUT', 'DELETE'])
-@api.route('/bucketlist/<bucket_id>/items/', endpoint='items', methods=['GET', 'POST'])
+@api.route('/bucketlist/<bucket_id>/item/<item_id>/', strict_slashes=False, endpoint='item', methods=['GET', 'PUT', 'DELETE'])
+@api.route('/bucketlist/<bucket_id>/items/', strict_slashes=False, endpoint='items', methods=['GET', 'POST'])
 class BucketlistItems(Resource):
 
     @jwt_required()
@@ -202,7 +202,7 @@ class BucketlistItems(Resource):
         return response
 
 
-@api.route('/sharebucketlist/<bucket_id>/<user_id>', endpoint='share', methods=['POST', 'GET'])
+@api.route('/sharebucketlist/<bucket_id>/<user_id>', endpoint='share', strict_slashes=False, methods=['POST', 'GET'])
 class ShareBucketlist(Resource):
 
     @jwt_required()
@@ -273,7 +273,7 @@ class ShareBucketlist(Resource):
         return response
 
 
-@api.route('/auth/register/', endpoint='auth', methods=['POST', 'GET'])
+@api.route('/auth/register/', endpoint='auth', strict_slashes=False, methods=['POST', 'GET'])
 class Users(Resource):
 
     @api.expect(registration)
@@ -295,7 +295,7 @@ class Users(Resource):
         return response
 
 
-@api.route('/auth/login')
+@api.route('/auth/login', strict_slashes=False)
 class Generate(Resource):
     @api.expect(login_test)
     def post(self):
