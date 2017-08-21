@@ -95,29 +95,26 @@ def handle_custom_exception(error):
 
 
 @api.route('/bucketlist/<bucket_id>/', endpoint='bucketlist', methods=['GET', 'PUT', 'DELETE'])
-@api.route('/bucketlists/', endpoint='bucketlists', methods=['GET', 'POST'])
+@api.route('/bucketlists/', endpoint='bucketlists', methods=['POST', 'GET'])
 class Bucketlist(Resource):
-    
+
     @jwt_required()
     def get(self, **kwargs):
         ''' gets data from `bucketlist` table  '''
         limit = request.args.get('limit')
         search = request.args.get('q')
+        page = request.args.get('page')
 
-        if limit:
-            response = bucket.get_all_buckets_with_limit(
-                limit, 1)
-
-        elif search:
-            response = bucket.get_all_buckets_with_limit_query(
-                search, limit, 1)
-
-        elif kwargs.get("bucket_id") is not None:
+        if kwargs.get("bucket_id") is not None:
             response = bucket.get_bucket(
-                kwargs['bucket_id'], 1)
+                kwargs['bucket_id'], int(current_identity))
+
+        elif limit or search or page:
+            response = bucket.get_all_buckets_with_limit_query(
+                search, limit, int(current_identity), page)
 
         else:
-            response = bucket.get_bucket_list_by_id(1)
+            response = bucket.get_bucket_list_by_id(int(current_identity))
         return make_response(jsonify(response), 201)
 
     @jwt_required()
@@ -158,16 +155,16 @@ class BucketlistItems(Resource):
         ''' gets data to `bucketlistitems` table  '''
         limit = request.args.get('limit')
         q = request.args.get('q')
-        if q and limit:
-            response = item.get_all_buckets_with_search_limit(
-                kwargs['bucket_id'], limit, q)
-        elif limit:
-            response = item.get_all_buckets_with_limit(
-                kwargs['bucket_id'], limit)
+        page = request.args.get('page')
 
-        elif kwargs.get('item_id') and kwargs.get('bucket_id'):
+        if kwargs.get('item_id') and kwargs.get('bucket_id'):
             response = item.get_item_by_id(
                 kwargs['bucket_id'], kwargs['item_id'])
+        
+        elif limit or q or page:
+            response = item.get_all_buckets_with_search_limit(
+                kwargs['bucket_id'], limit, q, page)
+
         else:
             response = item.get_items(kwargs.get("bucket_id"))
         return make_response(jsonify(response), 201)
@@ -211,7 +208,7 @@ class ShareBucketlist(Resource):
     @jwt_required()
     def post(self, bucket_id, user_id):
         ''' shares bucketlist another user  '''
-        
+
         # get bucketlist to be shared
         bucketlist = bucket.get_bucket(bucket_id, int(current_identity))
 
