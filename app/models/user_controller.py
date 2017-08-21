@@ -60,14 +60,3 @@ class UserStore(object):
         user = User.query.filter_by(username=username).first()
         return user
 
-    def get_all(self):
-        ''' gets all users '''
-        response = User.query.all()
-        user_list = []
-        for user in response:
-            user_container = {}
-            user_container['name'] = user.name
-            user_container['email'] = user.email
-            user_container['id'] = user.id
-            user_list.append(user_container)
-        return user_list
