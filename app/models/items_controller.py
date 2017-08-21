@@ -56,21 +56,6 @@ class ItemStore(object):
             BucketlistItems.bucket_id == bucket_id).paginate(page=1, per_page=10)
         return self.item_paginate(paginate)
 
-    def item_obj_unpacks(self, data):
-        ''' unpacks orm data object '''
-        item_list = []
-        for item in data:
-            item_container = {}
-            item_container['item_status'] = item.item_status
-            item_container['item_status'] = item.item_status
-            item_container['due_date'] = item.due_date
-            item_container['bucket_id'] = item.bucket_id
-            item_list.append(item_container)
-        if len(item_list) > 0:
-            return make_response(jsonify(item_list), 200)
-        else:
-            return make_response(jsonify(item_list), 404)
-
     def item_paginate(self, paginate_obj):
         ''' unpacks pagination object '''
         item_list = []
