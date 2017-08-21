@@ -23,7 +23,7 @@ class TestCaseBucket(BaseTest):
         rv = self.client.post(
             '/bucketlists/', data=json.dumps(self.empty_bucket), headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()),
-                         {'status_code': 400, 'response': 'All fields are required'})
+                         { 'message': 'All fields are required'})
 
     def test_get_with_query_bucketlist(self):
         self.client.post(
@@ -57,12 +57,28 @@ class TestCaseBucket(BaseTest):
         self.assertEqual(json.loads(rv.data.decode()), [
                          {'user_id': 1, 'bucket_name': 'Trip to Mars', 'bucket_description': 'test', 'bucket_id': 1}])
 
+    def test_fetch_empty_buckets(self):
+        rv = self.client.get('/bucketlists/?limit=1',
+                             headers=self.set_header())
+
+        self.assertEqual(json.loads(rv.data.decode()),
+                         {'message': 'No Buckets'})
+
+    def test_search_unavailable_bucket(self):
+        self.client.post(
+            '/bucketlists/', data=json.dumps(self.bucket), headers=self.set_header())
+        rv = self.client.get('/bucketlists/?q=hello',
+                             headers=self.set_header())
+        print(rv.data)
+        self.assertEqual(json.loads(rv.data.decode()),
+                         {'message': 'No Buckets'})
+
     def test_delete_bucketlist(self):
         self.client.post(
             '/bucketlists/', data=json.dumps(self.bucket), headers=self.set_header())
         rv = self.client.delete('/bucketlist/1/', headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()), {
-            'response': 'Bucket successfully deleted.', 'status_code': 200})
+            'message': 'Bucket successfully deleted.'})
 
     def test_update_bucketlist(self):
         self.client.post('/bucketlists/',
@@ -73,7 +89,7 @@ class TestCaseBucket(BaseTest):
                              data=json.dumps(self.update_bucket), headers=self.set_header())
 
         self.assertEqual(json.loads(rv.data.decode()),
-                         {'response': True, 'status_code': 200})
+                         {'message': 'Bucket successfully updated.'})
 
     def test_share_bucketlist(self):
 
@@ -88,14 +104,14 @@ class TestCaseBucket(BaseTest):
         user = dict(name="joe", username="andela",
                     email="andela@gmail.com", password_hash="andela")
         # register first user
-        self.client.post(
-            '/auth/register/', headers={"Content-Type": "application/json"}, data=json.dumps(user))
+        print(self.client.post(
+            '/auth/register/', headers={"Content-Type": "application/json"}, data=json.dumps(user)).data)
 
         # share bucketlist with existent user
         rv = self.client.post('/sharebucketlist/1/2',
                               data=json.dumps(self.item), headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()), {
-                         'response': 'Bucketlist successfully shared'})
+                         'message': 'Bucketlist successfully shared'})
 
     def test_share_bucketlist_with_yourself(self):
 
@@ -119,7 +135,7 @@ class TestCaseBucket(BaseTest):
                               data=json.dumps(self.item), headers=self.set_header())
 
         self.assertEqual(json.loads(rv.data.decode()), {
-                         'response': 'Cannot share a bucketlist with yourself'})
+                         'message': 'Cannot share a bucketlist with yourself'})
 
     def test_share_non_existent_bucketlist(self):
         # create a new bucketlist
@@ -134,15 +150,15 @@ class TestCaseBucket(BaseTest):
         user = dict(name="joe", username="andela",
                     email="andela@gmail.com", password_hash="andela")
         # register first user
-        rv = self.client.post(
-            '/auth/register/', headers={"Content-Type": "application/json"}, data=json.dumps(user))
+        print(self.client.post(
+            '/auth/register/', headers={"Content-Type": "application/json"}, data=json.dumps(user)).data)
 
         # share bucketlist with non-existent bucketlist
-        rv = self.client.post('/sharebucketlist/4/2',
+        rv = self.client.post('/sharebucketlist/1/4',
                               data=json.dumps(self.item), headers=self.set_header())
 
-        self.assertEqual(json.loads(rv.data.decode()), {
-                         'response': 'bucketlist does not exist'})
+        self.assertEqual(json.loads(rv.data.decode()),  {
+                         'message': 'user does not exist'})
 
     def test_share_bucketlist_non_existent_user(self):
 
@@ -164,4 +180,4 @@ class TestCaseBucket(BaseTest):
         rv = self.client.post('/sharebucketlist/1/4',
                               data=json.dumps(self.item), headers=self.set_header())
         self.assertEqual(json.loads(rv.data.decode()), {
-                         u'status_code': 404, u'response': u'user does not exist'})
+                          'message': 'user does not exist'})

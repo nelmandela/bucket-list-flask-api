@@ -94,8 +94,8 @@ def handle_custom_exception(error):
     return {'message': str(error)}, 401
 
 
-@api.route('/bucketlist/<bucket_id>/', endpoint='bucketlist', methods=['GET', 'PUT', 'DELETE'])
-@api.route('/bucketlists/', endpoint='bucketlists', methods=['POST', 'GET'])
+@api.route('/bucketlist/<bucket_id>/', endpoint='bucketlist',strict_slashes=False , methods=['GET', 'PUT', 'DELETE'])
+@api.route('/bucketlists/',strict_slashes=False, endpoint='bucketlists', methods=['POST', 'GET'])
 class Bucketlist(Resource):
 
     @jwt_required()
@@ -115,13 +115,13 @@ class Bucketlist(Resource):
 
         else:
             response = bucket.get_bucket_list_by_id(int(current_identity))
-        return make_response(jsonify(response), 201)
+        return response
 
     @jwt_required()
     def delete(self, **kwargs):
         ''' deletes data from `bucketlist` table  '''
         response = bucket.delete(kwargs['bucket_id'])
-        return make_response(jsonify(response), 201)
+        return response
 
     @api.expect(buckets)
     @api.doc(parser=parser)
@@ -131,7 +131,7 @@ class Bucketlist(Resource):
         data = request.get_json()
         response = bucket.update(
             bucket_id=bucket_id, bucket_name=data["bucket_name"], bucket_description=data["bucket_description"])
-        return make_response(jsonify(response), 201)
+        return response
 
     @api.expect(buckets)
     @api.doc(parser=parser)
@@ -143,11 +143,11 @@ class Bucketlist(Resource):
         bucket_description = data["bucket_description"]
         response = bucket.create_bucketlist(
             bucket_name=bucket_name, bucket_description=bucket_description, user_id=int(current_identity))
-        return make_response(jsonify(response), 201)
+        return response
 
 
-@api.route('/bucketlist/<bucket_id>/item/<item_id>/', endpoint='item', methods=['GET', 'PUT', 'DELETE'])
-@api.route('/bucketlist/<bucket_id>/items/', endpoint='items', methods=['GET', 'POST'])
+@api.route('/bucketlist/<bucket_id>/item/<item_id>/', strict_slashes=False, endpoint='item', methods=['GET', 'PUT', 'DELETE'])
+@api.route('/bucketlist/<bucket_id>/items/', strict_slashes=False, endpoint='items', methods=['GET', 'POST'])
 class BucketlistItems(Resource):
 
     @jwt_required()
@@ -160,20 +160,20 @@ class BucketlistItems(Resource):
         if kwargs.get('item_id') and kwargs.get('bucket_id'):
             response = item.get_item_by_id(
                 kwargs['bucket_id'], kwargs['item_id'])
-        
+
         elif limit or q or page:
             response = item.get_all_buckets_with_search_limit(
                 kwargs['bucket_id'], limit, q, page)
 
         else:
             response = item.get_items(kwargs.get("bucket_id"))
-        return make_response(jsonify(response), 201)
+        return response
 
     @jwt_required()
     def delete(self, bucket_id, item_id):
         ''' deletes data to `bucketlistitems` table  '''
         response = item.delete_item(bucket_id, item_id)
-        return make_response(jsonify(response), 201)
+        return response
 
     @jwt_required()
     @api.expect(items)
@@ -186,7 +186,7 @@ class BucketlistItems(Resource):
         due_date = data['due_date']
         response = item.update_item(
             item_name=item_name, item_status=item_status, due_date=due_date, bucket_id=bucket_id, item_id=item_id)
-        return make_response(jsonify(response), 201)
+        return response
 
     @api.expect(items)
     @api.doc(parser=parser)
@@ -199,10 +199,10 @@ class BucketlistItems(Resource):
         due_date = data['due_date']
         response = item.create_bucketlistitem(
             item_name=item_name, item_status=item_status, due_date=due_date, bucket_id=bucket_id)
-        return make_response(jsonify(response), 201)
+        return response
 
 
-@api.route('/sharebucketlist/<bucket_id>/<user_id>', endpoint='share', methods=['POST', 'GET'])
+@api.route('/sharebucketlist/<bucket_id>/<user_id>', endpoint='share', strict_slashes=False, methods=['POST', 'GET'])
 class ShareBucketlist(Resource):
 
     @jwt_required()
@@ -216,24 +216,26 @@ class ShareBucketlist(Resource):
         bucketItems = item.get_items(bucket_id)
 
         # initialize response object
-        response = None
+        new_response = None
 
         # disable user sharing bucketlist to himself
         if int(user_id) == int(current_identity):
             response = make_response(jsonify(
-                {"response": "Cannot share a bucketlist with yourself"}), 400)
-        elif bucketlist:
+                {"message": "Cannot share a bucketlist with yourself"}), 400)
+
+        elif bucketlist.status_code == 200:
             # create a new bucketlist and items to target user
             try:
-                response = bucket.create_bucketlist(
-                    bucket_name=bucketlist[0]['bucket_name'],
-                    bucket_description=bucketlist[0]['bucket_description'],
-                    user_id=user_id)
-            except:
-                pass
 
+                response = bucket.create_bucketlist(
+                    bucket_name=json.loads(bucketlist.data.decode())[
+                        0]['bucket_name'],
+                    bucket_description=json.loads(bucketlist.data.decode())[
+                        0]['bucket_description'],
+                    user_id=user_id)
+            except Exception as e:
                 response = make_response(jsonify(
-                    {"response": "user does not exist"}), 404)
+                    {"message": "user does not exist"}), 404)
 
             # get latest bucketlist added by user
             # -----------------------------------------------------------------------------------
@@ -248,28 +250,29 @@ class ShareBucketlist(Resource):
             # add items to the created bucketlist
             try:
                 item.create_bucketlistitem(
-                    item_name=bucketItems[0]['item_name'],
-                    item_status=bucketItems[0]['item_status'],
-                    due_date=bucketItems[0]['due_date'],
+                    item_name=json.loads(bucketlist.data.decode())[
+                        0]['item_name'],
+                    item_status=json.loads(bucketlist.data.decode())[
+                        0]['item_status'],
+                    due_date=json.loads(bucketlist.data.decode())[
+                        0]['due_date'],
                     bucket_id=current_bucket_id)
             except Exception as e:
                 print("Bucketlist does not have any items.")
 
             # if bucket successfully shared
-            if response['response'] == 'Bucket successfully added to user.':
-                print(user_id)
+            if json.loads(response.data.decode())['message'] == 'Bucket successfully added to user':
                 response = make_response(jsonify(
-                    {"response": "Bucketlist successfully shared"}), 201)
-
+                    {"message": "Bucketlist successfully shared"}), 201)
         else:
             # if bucketlist doesnt exist
             response = make_response(jsonify(
-                {"response": "bucketlist does not exist"}), 404)
+                {"message": "bucketlist does not exist"}), 404)
 
         return response
 
 
-@api.route('/auth/register/', endpoint='auth', methods=['POST', 'GET'])
+@api.route('/auth/register/', endpoint='auth', strict_slashes=False, methods=['POST', 'GET'])
 class Users(Resource):
 
     @api.expect(registration)
@@ -288,10 +291,10 @@ class Users(Resource):
         public_id = uuid.uuid4()
         response = user.create_user(
             name=name, username=username, email=email, password_hash=password_hash, public_id=public_id)
-        return make_response(jsonify(response), 201)
+        return response
 
 
-@api.route('/auth/login')
+@api.route('/auth/login', strict_slashes=False)
 class Generate(Resource):
     @api.expect(login_test)
     def post(self):

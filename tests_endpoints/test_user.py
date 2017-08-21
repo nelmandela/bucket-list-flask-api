@@ -21,7 +21,7 @@ class TestCaseBucketItems(BaseTest):
             '/auth/register/', headers=self.header_with_no_authetication(), data=json.dumps(self.user))
 
         self.assertEqual(json.loads(rv.data.decode()), {
-                         "response": "User successfully created.", "status_code": 201})
+                         "message": "User successfully created."})
 
     def test_register_with_invalid_email(self):
         # create a new user
@@ -31,7 +31,7 @@ class TestCaseBucketItems(BaseTest):
             '/auth/register/', headers=self.header_with_no_authetication(), data=json.dumps(self.user))
 
         self.assertEqual(json.loads(rv.data.decode()), {
-                         "response": "invalid email address", "status_code": 400})
+                         "message": "invalid email address"})
 
     def test_register_with_empty_email_field(self):
         # create a new user
@@ -41,7 +41,7 @@ class TestCaseBucketItems(BaseTest):
             '/auth/register/', headers=self.header_with_no_authetication(), data=json.dumps(self.user))
 
         self.assertEqual(json.loads(rv.data.decode()), {
-                         'response': 'All fields are required'})
+                         'message': 'All fields are required'})
 
 
     def test_register_with_existing_email(self):
@@ -60,7 +60,7 @@ class TestCaseBucketItems(BaseTest):
 
 
         self.assertEqual(json.loads(rv.data.decode()), {
-                         "response": "email already exists.", "status_code": 400})
+                         "message": "email already exists."})
 
     def test_register_with_existing_username(self):
         # create a new user
@@ -77,7 +77,7 @@ class TestCaseBucketItems(BaseTest):
             '/auth/register/', headers=self.header_with_no_authetication(), data=json.dumps(self.user2))
 
         self.assertEqual(json.loads(rv.data.decode()), {
-                         "response": "username already exists.", "status_code": 400})
+                         "message": "username already exists."})
 
     def test_login_with_invalid_credentials(self):
         # create a new user
@@ -122,4 +122,4 @@ class TestCaseBucketItems(BaseTest):
 
         rv = self.client.get(
             '/bucketlists/', headers=self.set_header())
-        self.assertEqual(rv._status_code, 201)
+        self.assertEqual(rv._status_code, 404)

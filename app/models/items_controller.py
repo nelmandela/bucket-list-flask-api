@@ -1,5 +1,4 @@
-# from sqlalchemy_paginator import Paginator
-from sqlalchemy.exc import IntegrityError
+from flask import Flask, make_response, jsonify
 
 from app.models.models import BucketlistItems, Bucketlist
 from app.models.models import db
@@ -12,7 +11,7 @@ class ItemStore(object):
 
     def create_bucketlistitem(self, **kwargs):
         ''' creates a new bucket item '''
-        item = {}
+        response = ""
         if '' not in [kwargs['item_name'],
                       kwargs['item_status'],
                       kwargs['due_date'],
@@ -24,16 +23,15 @@ class ItemStore(object):
                     kwargs['item_name'], kwargs['item_status'], kwargs['due_date'], kwargs['bucket_id'])
                 db.session.add(bucketitems)
                 db.session.commit()
-                item['status_code'] = 201
-                item['response'] = 'Bucketlist item successfully added to user.'
-
+                response = make_response(jsonify(
+                    {"message": "Bucketlist item successfully added to user."}), 201)
             else:
-                item['status_code'] = 404
-                item['response'] = 'Bucket does not exist'
+                response = make_response(jsonify(
+                    {"message": "Bucket does not exist"}), 404)
         else:
-            item['status_code'] = 400
-            item['response'] = 'All fields are required'
-        return item
+            response = make_response(jsonify(
+                {"message": "All fields are required"}), 400)
+        return response
 
     def get_item_by_id(self, bucket_id, item_id):
         ''' returns bucket item by id '''
@@ -58,18 +56,6 @@ class ItemStore(object):
             BucketlistItems.bucket_id == bucket_id).paginate(page=1, per_page=10)
         return self.item_paginate(paginate)
 
-    def item_obj_unpacks(self, data):
-        ''' unpacks orm data object '''
-        item_list = []
-        for item in data:
-            item_container = {}
-            item_container['item_status'] = item.item_status
-            item_container['item_status'] = item.item_status
-            item_container['due_date'] = item.due_date
-            item_container['bucket_id'] = item.bucket_id
-            item_list.append(item_container)
-        return item_list
-
     def item_paginate(self, paginate_obj):
         ''' unpacks pagination object '''
         item_list = []
@@ -80,15 +66,10 @@ class ItemStore(object):
             item_container['due_date'] = page.due_date
             item_container['bucket_id'] = page.bucket_id
             item_list.append(item_container)
-        return item_list
-
-# get_item_by_id
-
-    def get_all_buckets_with_limit(self, bucket_id, limit):
-        ''' gets all bucketlist items by bucket id'''
-        paginate = BucketlistItems.query.filter(
-            BucketlistItems.bucket_id == bucket_id).paginate(page=1, per_page=int(limit))
-        return self.item_paginate(paginate)
+        if len(item_list) > 0:
+            return make_response(jsonify(item_list), 200)
+        else:
+            return make_response(jsonify(item_list), 404)
 
     def get_all_buckets_with_search_limit(self, bucket_id, limit, q, page):
         '''  gets all bucketlist items by id and returns a pagination object'''
@@ -97,35 +78,30 @@ class ItemStore(object):
         elif page is None:
             page = 1
         try:
-
-            if q:
-                paginate = BucketlistItems.query.filter(
-                    BucketlistItems.bucket_id == bucket_id, BucketlistItems.item_name.like(q + '%')).paginate(page=int(page), per_page=int(limit))
-            else:
-                paginate = BucketlistItems.query.filter(
-                    BucketlistItems.bucket_id == bucket_id).paginate(page=int(page), per_page=int(limit))
+            paginate = BucketlistItems.query.filter(
+                BucketlistItems.bucket_id == bucket_id).paginate(page=int(page), per_page=int(limit))
             return self.item_paginate(paginate)
         except:
-            return {"message": "Bucketlist item not found "}
+            return make_response(jsonify({"message": "Bucketlist item not found "}), 404)
 
     def delete_item(self, bucket_id, item_id):
         ''' deletes an item from a bucketlist '''
-        item = {}
+        response = ""
         try:
             items = BucketlistItems.query.filter_by(
                 bucket_id=bucket_id, item_id=item_id).first()
             db.session.delete(items)
             db.session.commit()
-            item['response'] = "Bucketlist item successfully deleted."
-            item['status_code'] = 200
+            response = make_response(jsonify(
+                {"message": "Bucketlist item successfully deleted."}), 201)
         except:
-            item['response'] = "Bucketlist item does not exist."
-            item['status_code'] = 404
-        return item
+            response = make_response(jsonify(
+                {"message": "Bucketlist item does not exist."}), 404)
+        return response
 
     def update_item(self, **kwargs):
         ''' updates bucketlist item '''
-        item = {}
+        response = ""
         try:
             items = BucketlistItems.query.filter_by(
                 bucket_id=kwargs['bucket_id'], item_id=kwargs['item_id']).first()
@@ -133,10 +109,9 @@ class ItemStore(object):
             items.item_status = kwargs['item_status']
             items.due_date = kwargs['due_date']
             db.session.commit()
-
-            item['response'] = "Item successfully updated "
-            item['status_code'] = 200
+            response = make_response(jsonify(
+                {"message": "Item successfully updated"}), 201)
         except:
-            item['response'] = "Bucketlist item does not exist"
-            item['status_code'] = 404
-        return item
+            response = make_response(jsonify(
+                {"message": "Bucketlist item does not exist"}), 404)
+        return response
