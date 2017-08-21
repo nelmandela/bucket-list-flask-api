@@ -217,7 +217,6 @@ class ShareBucketlist(Resource):
 
         # initialize response object
         new_response = None
-        # print()
 
         # disable user sharing bucketlist to himself
         if int(user_id) == int(current_identity):
